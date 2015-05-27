@@ -1,4 +1,3 @@
-
 from werkzeug.exceptions import MethodNotAllowed, NotImplemented
 
 class Handler(object):

@@ -18,19 +18,25 @@ class SpaGunicornApplication(GunicornApplication):
     instead of a big ugly gunicorn line.
     """
 
-    def __init__(self, app, **kwargs):
-        self.app = app
-        self.settings = kwargs
+    worker_class = 'gwebsocket.gunicorn.GWebSocketWorker'
+    accesslog = '-'
+
+    def __init__(self, wsgi_app, gunicorn_config=None):
+        self.app = wsgi_app
+        self.gunicorn_config = gunicorn_config or {}
         super(GunicornApplication, self).__init__()
 
     def init(self, *args):
-        default_bind = '0.0.0.0:%s' % os.getenv('PORT', 8000)
-        self.settings['bind'] = self.settings.get('bind', default_bind)
-        return self.settings
+        config = dict(self.gunicorn_config)
+        config['bind'] = config.get('bind',
+                                    '0.0.0.0:%s' % os.getenv('PORT', 8000))
+        config['worker_class'] = config.get('worker_class', self.worker_class)
+        return config
 
     def load(self):
         return self.app
 
 
-def run_gunicorn(app, **kwargs):
-    SpaGunicornApplication(app, **kwargs).run()
+def run_gunicorn(app, gunicorn_config=None):
+    gunicorn_app = SpaGunicornApplication(app, gunicorn_config)
+    gunicorn_app.run()

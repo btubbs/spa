@@ -1,10 +1,12 @@
 from spa import gzip_util
 
+
 COMPRESSABLE_MIMETYPES = (
     'text/plain',
     'text/html',
     'text/css',
     'application/json',
+    'application/javascript',
     'application/x-javascript',
     'text/xml',
     'application/xml',
@@ -55,13 +57,9 @@ class GzipMiddleware(object):
             buffer['exc_info'] = exc_info
             return _write
 
-        source_data = self.app(environ, _start_response)
-        return_data = source_data
+        data = self.app(environ, _start_response)
         if buffer['status'].startswith('200 ') and buffer['to_gzip']:
-            return_data = gzip_util.compress(source_data, self.compress_level)
-            if hasattr(source_data, 'close'):
-                print source_data.close
-                #return_data.close = source_data.close
+            data = gzip_util.compress(data, self.compress_level)
             headers = buffer['headers']
             headers.append(('Content-Encoding', 'gzip'))
             headers.append(('Vary', 'Accept-Encoding'))
@@ -81,4 +79,4 @@ class GzipMiddleware(object):
         if buffer['body']:
             _writable(buffer['body'])
 
-        return return_data
+        return data

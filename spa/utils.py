@@ -37,6 +37,6 @@ class SpaGunicornApplication(GunicornApplication):
         return self.app
 
 
-def run_gunicorn(app, gunicorn_config=None):
+def run(app, gunicorn_config=None):
     gunicorn_app = SpaGunicornApplication(app, gunicorn_config)
     gunicorn_app.run()

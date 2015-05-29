@@ -1,0 +1,22 @@
+Spa is written and maintained by the Spa Team and various contributors:
+
+Project Leader / Developer:
+
+- Brent Tubbs <brent.tubbs@gmail.com>
+
+Contributors:
+
+- Michal Wasilewski
+
+The streaming GZIP implementation is taken from CherryPy.
+
+    Copyright (c) 2002-2010, CherryPy Team (team@cherrypy.org)
+
+The GZIP middleware code is adapted from ibkon-wsgi-gzip-middleware.
+(https://code.google.com/p/ibkon-wsgi-gzip-middleware/)
+
+    Copyright (c) 2011, Ibkon
+
+The StaticHandler is adapted from Werkzeug's SharedDataMiddleware.
+
+    Copyright (c) 2014 by the Werkzeug Team

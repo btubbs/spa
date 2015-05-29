@@ -98,8 +98,6 @@ class StaticHandler(Handler):
             adler32(real_filename) & 0xffffffff
         )
 
-
-
     def get_filename_and_loader(self, path):
         file_loader = None
         exports = {'': self.loader}
@@ -117,12 +115,11 @@ class StaticHandler(Handler):
 
         return real_filename, file_loader
 
-    def get(self, path):
-        #cleaned_path = get_path_info(environ)
+    def get(self, filepath):
         if PY2:
-            path = path.encode(sys.getfilesystemencoding())
+            filepath = filepath.encode(sys.getfilesystemencoding())
         # sanitize the path for non unix systems
-        path = path.strip('/')
+        path = filepath.strip('/')
         for sep in os.sep, os.altsep:
             if sep and sep != '/':
                 path = path.replace(sep, '/')
@@ -168,13 +165,6 @@ class StaticHandler(Handler):
         if self.request.method not in self.allowed_methods:
             raise NotImplemented()
 
-        if self.request.method == 'GET' and 'wsgi.websocket' in environ:
-            self.ws = environ['wsgi.websocket']
-            self.ws.add_close_callback(self.cleanup)
-
-            handler = self.websocket
-        else:
-            handler = getattr(self, self.request.method.lower())
-
+        handler = getattr(self, self.request.method.lower())
         resp = handler(**self.params)
         return resp(environ, start_response)

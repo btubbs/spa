@@ -2,9 +2,12 @@
 
 import setuptools
 
+with open('spa/version.txt') as f:
+    VERSION = f.read().strip()
+
 setup_params = dict(
     name='spa',
-    version='0.0.2',
+    version=VERSION,
     author='Brent Tubbs',
     author_email='brent.tubbs@gmail.com',
     packages=setuptools.find_packages(),

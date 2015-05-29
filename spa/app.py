@@ -3,7 +3,7 @@ from werkzeug.wrappers import BaseRequest
 from spa.urls import build_rules
 
 class App(object):
-    def __init__(self, urls, settings):
+    def __init__(self, urls, settings=None):
         self.urls = urls
         self.settings = settings
         self.map, self.handlers = build_rules(urls)

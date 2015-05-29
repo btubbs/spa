@@ -55,7 +55,15 @@ author = u'Brent Tubbs'
 # built documents.
 #
 # The short X.Y version.
-from spa.version import VERSION
+
+HERE = os.path.realpath(os.path.dirname(__file__))
+VERSION_PATH = os.path.join(
+    os.path.dirname(HERE),
+    'spa',
+    'version.txt'
+)
+with open(VERSION_PATH) as f:
+    VERSION = f.read().strip()
 version = VERSION
 # The full version, including alpha/beta/rc tags.
 release = VERSION

@@ -50,7 +50,7 @@ Here's a simple Spa app::
         ('/datetime/', 'datetime', DateTime),
     )
 
-    app = spa.App(routes, {})
+    app = spa.App(routes)
     spa.run(app)
 
 The DateTime handler demonstrates the RESTSockets pattern at work.  When making an

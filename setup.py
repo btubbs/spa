@@ -18,6 +18,11 @@ setup_params = dict(
         'gwebsocket>=0.9.6',
         'Werkzeug>=0.10.1',
     ],
+
+    tests_require=[
+        'pytest',
+        'websocket-client',
+    ],
     description=('A Python micro framework for REST APIs and single-page-applications.'),
 )
 

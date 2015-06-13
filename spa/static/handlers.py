@@ -1,17 +1,22 @@
 import mimetypes
 import os
 import sys
-import posixpath
 from zlib import adler32
 from time import time, mktime
 from datetime import datetime
+from collections import namedtuple
+from pkg_resources import resource_filename
 
 from spa.handler import Handler
 from werkzeug.exceptions import NotFound
-from werkzeug.wrappers import BaseResponse
-from werkzeug.wsgi import get_path_info, wrap_file
-from werkzeug._compat import iteritems, string_types, PY2
+from werkzeug.wsgi import wrap_file
+from werkzeug._compat import iteritems, string_types
 from werkzeug.http import is_resource_modified, http_date
+
+from spa.utils import clean_path
+
+
+File = namedtuple('File', ('handle', 'name', 'mtime', 'size', 'mimetype'))
 
 
 class StaticHandler(Handler):
@@ -22,16 +27,15 @@ class StaticHandler(Handler):
         self.cache_timeout = cache_timeout
 
         if isinstance(directory, tuple):
-            loader = self.get_package_loader(*directory)
-        elif isinstance(directory, string_types):
-            if os.path.isfile(directory):
-                loader = self.get_file_loader(directory)
-            else:
-                loader = self.get_directory_loader(directory)
-        else:
-            raise TypeError('unknown def %r' % directory)
+            directory = resource_filename(*directory)
 
+        if not isinstance(directory, string_types):
+            raise TypeError('unknown def %r' % directory)
+        loader = self.get_directory_loader(directory)
         self.loader = loader
+
+        self.directory = os.path.realpath(directory)
+
         if disallow is not None:
             from fnmatch import fnmatch
             self.is_allowed = lambda x: not fnmatch(x, disallow)
@@ -50,33 +54,6 @@ class StaticHandler(Handler):
             datetime.utcfromtimestamp(os.path.getmtime(filename)),
             int(os.path.getsize(filename))
         )
-
-    def get_file_loader(self, filename):
-        return lambda x: (os.path.basename(filename), self._opener(filename))
-
-    def get_package_loader(self, package, package_path):
-        from pkg_resources import DefaultProvider, ResourceManager, \
-             get_provider
-        loadtime = datetime.utcnow()
-        provider = get_provider(package)
-        manager = ResourceManager()
-        filesystem_bound = isinstance(provider, DefaultProvider)
-        def loader(path):
-            if path is None:
-                return None, None
-            path = posixpath.join(package_path, path)
-            if not provider.has_resource(path):
-                return None, None
-            basename = posixpath.basename(path)
-            if filesystem_bound:
-                return basename, self._opener(
-                    provider.get_resource_filename(manager, path))
-            return basename, lambda: (
-                provider.get_resource_stream(manager, path),
-                loadtime,
-                0
-            )
-        return loader
 
     def get_directory_loader(self, directory):
         def loader(path):
@@ -115,37 +92,30 @@ class StaticHandler(Handler):
 
         return real_filename, file_loader
 
-    def get(self, filepath):
-        if PY2:
-            filepath = filepath.encode(sys.getfilesystemencoding())
-        # sanitize the path for non unix systems
-        path = filepath.strip('/')
-        for sep in os.sep, os.altsep:
-            if sep and sep != '/':
-                path = path.replace(sep, '/')
-        path = '/' + '/'.join(x for x in path.split('/')
-                              if x and x != '..')
+    def get_file(self, path):
+        path = clean_path(path)
 
         real_filename, file_loader = self.get_filename_and_loader(path)
         if file_loader is None or not self.is_allowed(real_filename):
-            return NotFound()
+            return None
 
         guessed_type = mimetypes.guess_type(real_filename)
-        mime_type = guessed_type[0] or self.fallback_mimetype
+        mimetype = guessed_type[0] or self.fallback_mimetype
         f, mtime, file_size = file_loader()
+        return File(f, real_filename, mtime, file_size, mimetype)
 
-
+    def make_response(self, file):
         def resp(environ, start_response):
             headers = [('Date', http_date())]
             if self.cache:
                 timeout = self.cache_timeout
-                etag = self.generate_etag(mtime, file_size, real_filename)
+                etag = self.generate_etag(file.mtime, file.size, file.name)
                 headers += [
                     ('Etag', '"%s"' % etag),
                     ('Cache-Control', 'max-age=%d, public' % timeout)
                 ]
-                if not is_resource_modified(environ, etag, last_modified=mtime):
-                    f.close()
+                if not is_resource_modified(environ, etag, last_modified=file.mtime):
+                    file.handle.close()
                     start_response('304 Not Modified', headers)
                     return []
                 headers.append(('Expires', http_date(time() + timeout)))
@@ -153,13 +123,20 @@ class StaticHandler(Handler):
                 headers.append(('Cache-Control', 'public'))
 
             headers.extend((
-                ('Content-Type', mime_type),
-                ('Content-Length', str(file_size)),
-                ('Last-Modified', http_date(mtime))
+                ('Content-Type', file.mimetype),
+                ('Content-Length', str(file.size)),
+                ('Last-Modified', http_date(file.mtime))
             ))
             start_response('200 OK', headers)
-            return wrap_file(environ, f)
+            return wrap_file(environ, file.handle)
         return resp
+
+    def get(self, filepath):
+        file = self.get_file(filepath)
+        if file is None:
+            return NotFound()
+
+        return self.make_response(file)
 
     def __call__(self, environ, start_response):
         if self.request.method not in self.allowed_methods:

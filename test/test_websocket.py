@@ -31,20 +31,22 @@ def test_echo():
 
     # start a server on that port
     p = multiprocessing.Process(target=run_echo_server, args=(port,))
-    p.start()
+    try:
+        p.start()
 
-    # wait for the port to be open.
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    tries = 0
-    max_tries = 10
-    while sock.connect_ex(('127.0.0.1', port)) != 0:
-        time.sleep(0.1)
-        tries += 1
-        assert tries < max_tries, "Timed out waiting for websocket server"
+        # wait for the port to be open.
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        tries = 0
+        max_tries = 10
+        while sock.connect_ex(('127.0.0.1', port)) != 0:
+            time.sleep(0.1)
+            tries += 1
+            assert tries < max_tries, "Timed out waiting for websocket server"
 
-    from websocket import create_connection
-    ws = create_connection('ws://localhost:%s/' % port)
-    ws.send('hey!')
-    assert ws.recv() == 'hey!'
-    ws.close()
-    p.terminate()
+        from websocket import create_connection
+        ws = create_connection('ws://localhost:%s/' % port)
+        ws.send('hey!')
+        assert ws.recv() == 'hey!'
+        ws.close()
+    finally:
+        p.terminate()

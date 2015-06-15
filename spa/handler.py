@@ -1,4 +1,4 @@
-from werkzeug.exceptions import MethodNotAllowed, NotImplemented
+from werkzeug.exceptions import MethodNotAllowed
 
 class Handler(object):
     """Baseclass for our handlers."""
@@ -11,7 +11,7 @@ class Handler(object):
         self.params = params
 
     def get(self):
-        raise MethodNotAllowed()
+        return MethodNotAllowed()
     post = delete = put = websocket = get
 
     def head(self):
@@ -22,7 +22,7 @@ class Handler(object):
 
     def __call__(self, environ, start_response):
         if self.request.method not in self.allowed_methods:
-            raise NotImplemented()
+            return MethodNotAllowed()(environ, start_response)
 
         if self.request.method == 'GET' and 'wsgi.websocket' in environ:
             self.ws = environ['wsgi.websocket']

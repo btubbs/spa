@@ -41,9 +41,46 @@ def test_put():
     resp = c.put('/', data='some data')
     assert resp.data == 'some data'
 
-# Things to test?
-# Other http methods.
-# sending data via POST/PUT
-# JSONResponse
-# URL parameters
-# kwargs in 4th argument of a route.
+
+def test_route_kwargs():
+    class Kwargy(spa.Handler):
+        def __init__(self, app, req, params, some_kwarg, **kwargs):
+            self.some_kwarg = some_kwarg
+            super(Kwargy, self).__init__(app, req, params, **kwargs)
+
+        def get(self):
+            return spa.Response(self.some_kwarg)
+
+    app = spa.App((
+        ('/', 'kwargy', Kwargy, {'some_kwarg': 'foo'}),
+    ))
+    c = Client(app, spa.Response)
+    resp = c.get('/')
+    assert resp.data == 'foo'
+
+
+def test_json_response():
+    class A(spa.Handler):
+        def get(self):
+            return spa.JSONResponse({'a': 1})
+
+    app = spa.App((
+        ('/', 'a', A),
+    ))
+    c = Client(app, spa.Response)
+    resp = c.get('/')
+    assert resp.data == '{"a": 1}'
+    assert resp.headers['Content-Type'] == "application/json"
+
+
+def test_path_args():
+    class A(spa.Handler):
+        def get(self, country, city):
+            return spa.Response("%s: %s" % (country, city))
+
+    app = spa.App((
+        ('/country/<country>/city/<city>/', 'a', A),
+    ))
+    c = Client(app, spa.Response)
+    resp = c.get('/country/Poland/city/Warsaw/')
+    assert resp.data == 'Poland: Warsaw'

@@ -1,3 +1,4 @@
+import multiprocessing
 import os
 import sys
 
@@ -20,21 +21,28 @@ class SpaGunicornApplication(GunicornApplication):
     instead of a big ugly gunicorn line.
     """
 
-    worker_class = 'gwebsocket.gunicorn.GWebSocketWorker'
-    accesslog = '-'
-    default_port = 8000
+    default_gunicorn_config = dict(
+        worker_class = 'gwebsocket.gunicorn.GWebSocketWorker',
+        accesslog = '-',
+        errorlog = '-',
+        workers=multiprocessing.cpu_count() * 2,
+        # Heroku/Velociraptor-friendly PORT handling.
+        bind='0.0.0.0:%s' % os.getenv('PORT', 8000),
+    )
 
     def __init__(self, wsgi_app, port=None, gunicorn_config=None):
         self.app = wsgi_app
-        self.port = port or os.getenv('PORT', self.default_port)
-        self.gunicorn_config = gunicorn_config or {}
+        self.gunicorn_config = dict(self.default_gunicorn_config)
+
+        gunicorn_config = gunicorn_config or {}
+        if port is not None and 'bind' not in gunicorn_config:
+            gunicorn_config['bind'] = '0.0.0.0:%s' % port
+        self.gunicorn_config.update(gunicorn_config)
         super(GunicornApplication, self).__init__()
 
-    def init(self, *args):
-        config = dict(self.gunicorn_config)
-        config['bind'] = config.get('bind', '0.0.0.0:%s' % self.port)
-        config['worker_class'] = config.get('worker_class', self.worker_class)
-        return config
+    def load_config(self):
+        for k, v in self.gunicorn_config.items():
+            self.cfg.set(k, v)
 
     def load(self):
         return self.app

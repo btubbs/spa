@@ -17,7 +17,7 @@ class Handler(object):
     def head(self):
         return self.get()
 
-    def cleanup(self):
+    def websocket_close(self):
         pass
 
     def __call__(self, environ, start_response):
@@ -26,7 +26,7 @@ class Handler(object):
 
         if self.request.method == 'GET' and 'wsgi.websocket' in environ:
             self.ws = environ['wsgi.websocket']
-            self.ws.add_close_callback(self.cleanup)
+            self.ws.add_close_callback(self.websocket_close)
 
             handler = self.websocket
         else:

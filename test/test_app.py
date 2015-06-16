@@ -84,3 +84,7 @@ def test_path_args():
     c = Client(app, spa.Response)
     resp = c.get('/country/Poland/city/Warsaw/')
     assert resp.data == 'Poland: Warsaw'
+
+
+def test_reverse_url():
+    assert False

@@ -15,7 +15,7 @@ setup_params = dict(
 
     install_requires=[
         'gunicorn>=19.1.1',
-        'gwebsocket>=0.9.6',
+        'gwebsocket>=0.9.7',
         'Werkzeug>=0.10.1',
     ],
 

@@ -2,12 +2,11 @@
 
 import setuptools
 
-with open('spa/version.txt') as f:
-    VERSION = f.read().strip()
 
 setup_params = dict(
     name='spa',
-    version=VERSION,
+    # Don't change this manually.  Use the 'bumpversion' tool.
+    version='0.0.6',
     author='Brent Tubbs',
     author_email='brent.tubbs@gmail.com',
     packages=setuptools.find_packages(),

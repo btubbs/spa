@@ -18,10 +18,10 @@ class App(object):
             handler_name, params = adapter.match()
             cls, kwargs = self.handlers[handler_name]
             wsgi_app = cls(self, req, params, **kwargs)
+            resp = wsgi_app(environ, start_response)
         except HTTPException, e:
             wsgi_app = e
-
-        resp = wsgi_app(environ, start_response)
+            resp = wsgi_app(environ, start_response)
 
         return resp
 

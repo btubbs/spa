@@ -3,6 +3,9 @@ import json
 from werkzeug import exceptions
 
 
+# Some freestanding methods for feeding into our dynamically-constructed
+# exception classes later.  They override the corresponding HTTPException
+# methods to produce JSON output.
 def get_body(self, environ=None):
     return json.dumps(dict(
         code=self.code,
@@ -19,8 +22,9 @@ def get_headers(self, environ=None):
 for obj_name in dir(exceptions):
     obj = getattr(exceptions, obj_name)
     if isinstance(obj, type) and issubclass(obj, exceptions.HTTPException):
-        cls = type(obj.__name__, (obj,), dict(
+        new_cls_name = 'JSON' + obj.__name__
+        cls = type(new_cls_name, (obj,), dict(
             get_body=get_body,
             get_headers=get_headers,
         ))
-        globals()[obj.__name__] = cls
+        globals()[new_cls_name] = cls

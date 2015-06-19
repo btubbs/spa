@@ -87,4 +87,12 @@ def test_path_args():
 
 
 def test_reverse_url():
-    assert False
+    class A(spa.Handler):
+        def get(self, foo, bar):
+            return spa.JSONResponse({'a': 1})
+
+    app = spa.App((
+        ('/a/<foo>/b/<bar>/', 'a', A),
+    ))
+
+    assert app.url('a', {'foo': 1, 'bar': 2}) == '/a/1/b/2/'

@@ -5,6 +5,7 @@ python:
   - 2.6
   - 2.7
 install:
-    python setup.py test
+    pip install .
+    pip install pytest websocket-client
 script:
     py.test

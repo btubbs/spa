@@ -1,0 +1,16 @@
+/* test import url */
+
+@import 'blah.css';
+@import '/static/css/blah2.css';
+
+@font-face {
+  font-family: 'MyFontFamily';
+  src: url('/static/font/lato-regular-webfont.eot?#iefix') format('embedded-opentype'), 
+       url('/static/font/lato-regular-webfont.woff') format('woff'), 
+       url('/static/font/lato-regular-webfont.ttf') format('truetype'),
+       url('/static/font/lato-regular-webfont.svg#svgFontName') format('svg');
+}
+
+.foo {
+  background-image: url(../img/background.png?foo=bar);
+}

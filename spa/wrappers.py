@@ -3,6 +3,7 @@ import json
 from werkzeug.wrappers import Response, Request as WRequest
 
 
+
 class JSONResponse(Response):
     def __init__(self, data, *args, **kwargs):
         kwargs['content_type'] = 'application/json'
@@ -24,3 +25,7 @@ class Request(WRequest):
     def json(self):
         if self.headers.get('content-type') == 'application/json':
             return json.loads(self.data)
+        else:
+            from spa.exceptions import JSONBadRequest
+            raise JSONBadRequest('Expected Content-Type application/json, not %s'
+                                 % self.headers.get('content-type'))

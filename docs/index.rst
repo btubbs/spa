@@ -25,7 +25,6 @@ Here's a simple Spa app::
             return spa.Response('hello!')
 
         def websocket(self, name=None):
-            import ipdb; ipdb.set_trace()
             if name:
                 self.ws.send('hello ' + name)
 

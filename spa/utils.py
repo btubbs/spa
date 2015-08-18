@@ -22,12 +22,13 @@ class SpaGunicornApplication(GunicornApplication):
     """
 
     default_gunicorn_config = dict(
-        worker_class = 'gwebsocket.gunicorn.GWebSocketWorker',
+        worker_class = os.getenv('GUNICORN_WORKER_CLASS', 'gwebsocket.gunicorn.GWebSocketWorker'),
         accesslog = '-',
         errorlog = '-',
-        workers=multiprocessing.cpu_count() * 2,
+        workers=os.getenv('GUNICORN_WORKER_COUNT', multiprocessing.cpu_count() * 2),
         # Heroku/Velociraptor-friendly PORT handling.
         bind='0.0.0.0:%s' % os.getenv('PORT', 8000),
+        graceful_timeout = os.getenv('GUNICORN_WORKER_GRACETIME', 30),
     )
 
     def __init__(self, wsgi_app, port=None, gunicorn_config=None):

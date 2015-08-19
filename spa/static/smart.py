@@ -217,7 +217,7 @@ def get_hash(lines, hash_len=12):
     return md5.hexdigest()[:hash_len]
 
 
-class CacheBuster(object):
+class SmartStatic(object):
     """
     A factory for making CacheBustingStaticHandler instances that share a cache
     instance.

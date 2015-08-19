@@ -2,7 +2,7 @@ import spa
 from spa.static import StaticHandler
 
 routes = (
-    ('/', '', StaticHandler, {'directory': '.'}),
+    ('/<path:filepath>', '', StaticHandler, {'directory': '.'}),
 )
 app = spa.App(routes)
 

@@ -1,2 +1,2 @@
 from spa.static.handlers import StaticHandler
-from spa.static.hashed import CacheBuster
+from spa.static.smart import SmartStatic

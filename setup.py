@@ -1,12 +1,19 @@
 #!/usr/bin/python
 
+import os
 import setuptools
 
+# To update Spa's version.txt file and ensure that a matching tag is created in
+# version control, please use the 'bumpversion' command line tool.
+
+here = os.path.dirname(os.path.realpath(__file__))
+version_file = os.path.join(here, 'spa', 'version.txt')
+with open(version_file) as f:
+    version = f.read().strip()
 
 setup_params = dict(
     name='spa',
-    # Don't change this manually.  Use the 'bumpversion' tool.
-    version='0.0.7',
+    version=version,
     author='Brent Tubbs',
     author_email='brent.tubbs@gmail.com',
     packages=setuptools.find_packages(),

@@ -96,3 +96,16 @@ def test_reverse_url():
     ))
 
     assert app.url('a', {'foo': 1, 'bar': 2}) == '/a/1/b/2/'
+
+
+def test_json_handler():
+    class A(spa.JSONHandler):
+        def get(self):
+            return {'a': 1}
+    app = spa.App((
+        ('/', 'a', A),
+    ))
+    c = Client(app, spa.Response)
+    resp = c.get('/')
+    assert resp.data == '{"a": 1}'
+    assert resp.headers['Content-Type'] == "application/json"

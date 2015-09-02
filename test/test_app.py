@@ -95,7 +95,7 @@ def test_reverse_url():
         ('/a/<foo>/b/<bar>/', 'a', A),
     ))
 
-    assert app.url('a', {'foo': 1, 'bar': 2}) == '/a/1/b/2/'
+    assert app.url('a', foo=1, bar=2) == '/a/1/b/2/'
 
 
 def test_json_handler():

@@ -145,3 +145,20 @@ class StaticHandler(Handler):
         handler = getattr(self, self.request.method.lower())
         resp = handler(**self.params)
         return resp(environ, start_response)
+
+
+class Static(object):
+    """
+    A factory for making StaticHandler instances that share a directory
+    instance.
+    """
+
+    def __init__(self, directory, **kwargs):
+        self.directory = directory
+        self.kwargs = kwargs
+
+    def __call__(self, app, req, params, **kwargs):
+        new_kwargs = dict(self.kwargs)
+        new_kwargs.update(kwargs)
+        return StaticHandler(app, req, params, directory=self.directory,
+                             **new_kwargs)

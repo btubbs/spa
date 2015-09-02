@@ -20,12 +20,13 @@ class HomePage(object):
     template = BASE_TEMPLATE
     rendered = None
 
-    def __init__(self, static_url, smart_static, body='<body></body>',
-                 scripts=None, stylesheets=None, extra_head='', extra_foot='',
-                 template=None):
+    def __init__(self, static_url, static_handler, hash_paths=True,
+                 body='<body></body>', scripts=None, stylesheets=None,
+                 extra_head='', extra_foot='', template=None):
 
         self.static_url = static_url
-        self.smart_static = smart_static
+        self.static_handler = static_handler
+        self.hash_paths = hash_paths
         self.body = body
         self.scripts = scripts or []
         self.stylesheets = stylesheets or []
@@ -38,12 +39,14 @@ class HomePage(object):
     def build_url(self, filepath):
         if filepath.startswith('/'):
             filepath = filepath[1:]
-        abs_path = os.path.join(self.smart_static.directory, filepath)
-        with open(abs_path) as f:
-            file_hash = get_hash(f)
 
-        filepath_with_hash = add_hash_to_filepath(filepath, file_hash)
-        return posixpath.join(self.static_url, filepath_with_hash)
+        if self.hash_paths:
+            abs_path = os.path.join(self.static_handler.directory, filepath)
+            with open(abs_path) as f:
+                file_hash = get_hash(f)
+
+            filepath = add_hash_to_filepath(filepath, file_hash)
+        return posixpath.join(self.static_url, filepath)
 
     def stylesheet_tag(self, stylesheet):
         tmpl = '<link rel="stylesheet" type="text/css" href="{url}" />'

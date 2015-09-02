@@ -25,7 +25,7 @@ class App(object):
 
         return resp
 
-    def url(self, endpoint, values=None):
+    def url(self, endpoint, **values):
         return self.map.bind('').build(endpoint, values=values)
 
 

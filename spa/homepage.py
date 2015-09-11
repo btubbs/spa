@@ -44,7 +44,7 @@ class HomePage(object):
         # this class.  This is useful for integrating with React .jsx files or
         # Babeljs .es6 files, for example.
 
-        # IE-friendly override of application/javacsript
+        # IE-friendly override of application/javascript
         extra_mimetypes = extra_mimetypes or {'.js': 'text/javascript'}
 
         self.mimetypes = mimetypes.MimeTypes()

@@ -43,12 +43,13 @@ class HomePage(object):
         # provide them as a dict like {'.jsx': 'text/jsx'} when initializing
         # this class.  This is useful for integrating with React .jsx files or
         # Babeljs .es6 files, for example.
-        if extra_mimetypes:
-            self.mimetypes = mimetypes.MimeTypes()
-            for ext, typ in extra_mimetypes.items():
-                self.mimetypes.add_type(typ, ext)
-        else:
-            self.mimetypes = mimetypes
+
+        # IE-friendly override of application/javacsript
+        extra_mimetypes = extra_mimetypes or {'.js': 'text/javascript'}
+
+        self.mimetypes = mimetypes.MimeTypes()
+        for ext, typ in extra_mimetypes.items():
+            self.mimetypes.add_type(typ, ext)
 
 
     def mimetype(self, url):

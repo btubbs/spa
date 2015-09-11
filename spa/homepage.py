@@ -1,4 +1,5 @@
 import os
+import mimetypes
 import posixpath
 
 from spa.wrappers import Response
@@ -16,13 +17,15 @@ BASE_TEMPLATE = """<!DOCTYPE HTML>
 </html>
 """
 
+
 class HomePage(object):
     template = BASE_TEMPLATE
     rendered = None
 
     def __init__(self, static_url, static_handler, hash_paths=True,
                  body='<body></body>', scripts=None, stylesheets=None,
-                 extra_head='', extra_foot='', template=None):
+                 extra_head='', extra_foot='', template=None,
+                 extra_mimetypes=None):
 
         self.static_url = static_url
         self.static_handler = static_handler
@@ -35,6 +38,23 @@ class HomePage(object):
 
         if template:
             self.template = template
+
+        # If you want special mimetypes for specific file extensions, you can
+        # provide them as a dict like {'.jsx': 'text/jsx'} when initializing
+        # this class.  This is useful for integrating with React .jsx files or
+        # Babeljs .es6 files, for example.
+        if extra_mimetypes:
+            self.mimetypes = mimetypes.MimeTypes()
+            for ext, typ in extra_mimetypes.items():
+                self.mimetypes.add_type(typ, ext)
+        else:
+            self.mimetypes = mimetypes
+
+
+    def mimetype(self, url):
+        guessed = self.mimetypes.guess_type(url)[0]
+        return guessed if guessed else 'application/octet-stream'
+
 
     def build_url(self, filepath):
         if filepath.startswith('/'):
@@ -49,12 +69,14 @@ class HomePage(object):
         return posixpath.join(self.static_url, filepath)
 
     def stylesheet_tag(self, stylesheet):
-        tmpl = '<link rel="stylesheet" type="text/css" href="{url}" />'
-        return tmpl.format(url=self.build_url(stylesheet))
+        tmpl = '<link rel="stylesheet" type="{type}" href="{url}" />'
+        url = self.build_url(stylesheet)
+        return tmpl.format(url=url, type=self.mimetype(url))
 
     def script_tag(self, script):
-        tmpl = '<script type="text/javascript" src="{url}"></script>'
-        return tmpl.format(url=self.build_url(script))
+        tmpl = '<script type="{type}" src="{url}"></script>'
+        url = self.build_url(script)
+        return tmpl.format(url=url, type=self.mimetype(url))
 
     def get_stylesheet_tags(self):
         return '\n'.join([self.stylesheet_tag(s) for s in self.stylesheets])

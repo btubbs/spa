@@ -42,10 +42,8 @@ class JSONHandler(Handler):
     """Works the same as Handler, but allows you to reply with just a dict that
     will then be turned into a JSONResponse for you."""
 
-    def __call__(self, environ, start_response):
-
-        if self.request.method not in self.allowed_methods:
-            return MethodNotAllowed()(environ, start_response)
+    def _get_response(self):
+        environ = self.request.environ
 
         if self.request.method == 'GET' and 'wsgi.websocket' in environ:
             self.ws = environ['wsgi.websocket']
@@ -59,4 +57,9 @@ class JSONHandler(Handler):
 
         if isinstance(resp, dict):
             resp = JSONResponse(resp)
-        return resp(environ, start_response)
+        return resp
+
+    def __call__(self, environ, start_response):
+        if self.request.method not in self.allowed_methods:
+            return MethodNotAllowed()(environ, start_response)
+        return self._get_response()(environ, start_response)

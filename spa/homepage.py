@@ -8,6 +8,7 @@ from spa.static.smart import get_hash, add_hash_to_filepath
 BASE_TEMPLATE = """<!DOCTYPE HTML>
 <html>
 <head>
+{favicon}
 {stylesheets}
 {extra_head}
 </head>
@@ -25,7 +26,7 @@ class HomePage(object):
     def __init__(self, static_url, static_handler, hash_paths=True,
                  body='<body></body>', scripts=None, stylesheets=None,
                  extra_head='', extra_foot='', template=None,
-                 extra_mimetypes=None):
+                 extra_mimetypes=None, favicon=None):
 
         self.static_url = static_url
         self.static_handler = static_handler
@@ -35,6 +36,7 @@ class HomePage(object):
         self.stylesheets = stylesheets or []
         self.extra_head = extra_head
         self.extra_foot = extra_foot
+        self.favicon = favicon
 
         if template:
             self.template = template
@@ -79,6 +81,13 @@ class HomePage(object):
         url = self.build_url(script)
         return tmpl.format(url=url, type=self.mimetype(url))
 
+    def favicon_tag(self, favicon):
+        if favicon is None:
+            return ''
+        tmpl = '<link rel="icon" href="{url}">'
+        url = self.build_url(favicon)
+        return tmpl.format(url=url)
+
     def get_stylesheet_tags(self):
         return '\n'.join([self.stylesheet_tag(s) for s in self.stylesheets])
 
@@ -93,6 +102,7 @@ class HomePage(object):
                 body=self.body,
                 scripts=self.get_script_tags(),
                 extra_foot=self.extra_foot,
+                favicon=self.favicon_tag(self.favicon),
             )
         return self.rendered
 

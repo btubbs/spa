@@ -106,9 +106,14 @@ r"""
             request.client_session.save_cookie(response)
             return response(environ, start_response)
 """
+
+from datetime import datetime, timedelta
+from Cookie import SimpleCookie
+
 import jwt
 from werkzeug._compat import text_type
 from werkzeug.contrib.sessions import ModificationTrackingDict
+from werkzeug.http import dump_cookie
 
 
 class JWTCookie(ModificationTrackingDict):
@@ -226,3 +231,50 @@ class JWTCookie(ModificationTrackingDict):
             response.set_cookie(key, data, expires=expires, max_age=max_age,
                                 path=path, domain=domain, secure=secure,
                                 httponly=httponly)
+
+
+class JWTSessionMiddleware(object):
+    def __init__(self, app, secret_key, cookie_name='session', expire_days=1,
+                 algorithm='HS256'):
+        self.app = app
+        self.secret_key = secret_key
+        self.cookie_name = cookie_name
+        self.expire_days = expire_days
+        self.algorithm = algorithm
+
+    def __call__(self, environ, start_response):
+        # on the way in: if environ includes our cookie, then deserialize it and
+        # stick it back into environ as jwtsession.  If environ doesn't include
+        # one then make an empty one and stick that in.
+        if 'HTTP_COOKIE' in environ:
+            cookie = SimpleCookie(environ['HTTP_COOKIE'])
+            if self.cookie_name in cookie:
+                try:
+                    session = JWTCookie.unserialize(
+                        cookie[self.cookie_name].value,
+                        self.secret_key,
+                        self.algorithm
+                    )
+                except jwt.DecodeError:
+                    session = JWTCookie({}, self.secret_key, self.algorithm)
+            else:
+                session = JWTCookie({}, self.secret_key, self.algorithm)
+        else:
+            session = JWTCookie({}, self.secret_key, self.algorithm)
+        environ['jwtsession'] = session
+
+
+        # on the way out: serialize jwtsession and stick it into headers as
+        # 'session'.
+        def session_start_response(status, headers, exc_info=None):
+            # TODO: make this smarter so we can avoid sending cookies with
+            # static file requests.
+            if session.should_save or session == {}:
+                # add our cookie to headers
+                c = dump_cookie(self.cookie_name,
+                                value=environ['jwtsession'].serialize(),
+                                max_age=timedelta(days=self.expire_days))
+                headers.append(('Set-Cookie', c))
+            return start_response(status, headers, exc_info=exc_info)
+
+        return self.app(environ, session_start_response)

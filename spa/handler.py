@@ -11,6 +11,7 @@ class Handler(object):
         self.app = app
         self.request = req
         self.params = params
+        self.kwargs = kwargs
 
     def get(self, *args, **kwargs):
         return MethodNotAllowed()

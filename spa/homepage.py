@@ -26,7 +26,8 @@ class HomePage(object):
     def __init__(self, static_url, static_handler, hash_paths=True,
                  body='<body></body>', scripts=None, stylesheets=None,
                  extra_head='', extra_foot='', template=None,
-                 extra_mimetypes=None, favicon=None):
+                 extra_mimetypes=None, favicon=None,
+                 content_type='text/html; charset=utf-8'):
 
         self.static_url = static_url
         self.static_handler = static_handler
@@ -37,6 +38,7 @@ class HomePage(object):
         self.extra_head = extra_head
         self.extra_foot = extra_foot
         self.favicon = favicon
+        self.content_type = content_type
 
         if template:
             self.template = template
@@ -107,4 +109,4 @@ class HomePage(object):
         return self.rendered
 
     def __call__(self, app, req, params):
-        return Response(self.render(), content_type='text/html')
+        return Response(self.render(), content_type=self.content_type)

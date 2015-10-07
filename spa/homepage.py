@@ -99,7 +99,7 @@ class HomePage(object):
         return '\n'.join([self.script_tag(s) for s in self.scripts])
 
     def get_title(self):
-        return '<title>{title}</title>' % self.title if self.title else ''
+        return '<title>%s</title>' % self.title if self.title else ''
 
     def render(self):
         if self.rendered is None:

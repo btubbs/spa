@@ -11,7 +11,7 @@ class JSONResponse(Response):
 
 JSON_TYPES = set([
     'application/json',
-    'application/json;charset=UTF-8',
+    'application/json;charset=utf-8',
 ])
 
 class Request(WRequest):
@@ -27,7 +27,7 @@ class Request(WRequest):
     max_content_length = 1024 * 1024 * 4
 
     def json(self):
-        if self.headers.get('content-type') in JSON_TYPES:
+        if self.headers.get('content-type', '').lower() in JSON_TYPES:
             return json.loads(self.data)
         else:
             from spa.exceptions import JSONBadRequest

@@ -3,16 +3,17 @@ import json
 from werkzeug.wrappers import Response, Request as WRequest
 
 
-
 class JSONResponse(Response):
     def __init__(self, data, *args, **kwargs):
         kwargs['content_type'] = 'application/json'
         return super(JSONResponse, self).__init__(json.dumps(data), *args, **kwargs)
 
+
 JSON_TYPES = set([
     'application/json',
     'application/json;charset=utf-8',
 ])
+
 
 class Request(WRequest):
     """

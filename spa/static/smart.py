@@ -223,9 +223,9 @@ class SmartStatic(object):
     instance.
     """
 
-    def __init__(self, directory):
+    def __init__(self, directory, hash_cache=None):
         self.directory = directory
-        self.hash_cache = HashCache()
+        self.hash_cache = hash_cache or HashCache()
 
     def __call__(self, app, req, params, **kwargs):
         return CacheBustingStaticHandler(app, req, params,

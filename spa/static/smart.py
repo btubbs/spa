@@ -40,31 +40,45 @@ class CacheBustingStaticHandler(StaticHandler):
          """@import url("{hashed_url}")"""),
     )
 
-    def __init__(self, app, req, params, directory, hash_cache, **kwargs):
+    def __init__(self, app, req, params, directory, hash_cache, hash_paths=True,
+                 static_url_root='/static/', **kwargs):
         self.hash_cache = hash_cache
+        self.hash_paths = hash_paths
+        self.static_url_root = static_url_root
         return super(CacheBustingStaticHandler, self).__init__(
             app, req, params, directory, **kwargs
         )
 
-    def get(self, filepath):
-        unhashed_path, path_hash = parse_hashed_filepath(filepath)
-        if unhashed_path is None:
-            return NotFound()
 
+    def get_path_hash(self, unhashed_path):
         if self.hash_cache.get_path_hash(unhashed_path) is None:
             # compute hash, and cache it.
             file = self.get_file(unhashed_path)
             if file is None:
-                return NotFound()
+                return None
             try:
                 hash_str = get_hash(file.handle)
                 self.hash_cache.set_path_hash(unhashed_path, hash_str)
             finally:
                 file.handle.close()
+        return self.hash_cache.get_path_hash(unhashed_path)
+
+
+    def get(self, filepath):
+        if not self.hash_paths:
+            return super(CacheBustingStaticHandler, self).get(filepath)
+
+        unhashed_path, path_hash = parse_hashed_filepath(filepath)
+        if unhashed_path is None:
+            return NotFound()
+
 
         # If hash we were passed doesn't equal the one we've computed and
         # cached, then 404.
-        if path_hash != self.hash_cache.get_path_hash(unhashed_path):
+        computed_hash = self.get_path_hash(unhashed_path)
+        if computed_hash is None:
+            return NotFound()
+        if path_hash != computed_hash:
             return NotFound()
 
         # For CSS stylesheets only, we'll rewrite content so that url()
@@ -223,12 +237,15 @@ class SmartStatic(object):
     instance.
     """
 
-    def __init__(self, directory, hash_cache=None):
+    def __init__(self, directory, hash_paths=True):
         self.directory = directory
-        self.hash_cache = hash_cache or HashCache()
+        self.hash_paths = hash_paths
+        self.hash_cache = HashCache()
 
     def __call__(self, app, req, params, **kwargs):
+        print 'call', app, req, params, kwargs
         return CacheBustingStaticHandler(app, req, params,
                                          directory=self.directory,
+                                         hash_paths=self.hash_paths,
                                          hash_cache=self.hash_cache,
                                          **kwargs)

@@ -19,7 +19,7 @@ setup_params = dict(
     packages=setuptools.find_packages(),
     include_package_data=True,
     install_requires=[
-        'gunicorn>=19.1.1',
+        'gunicorn>=19.4.1',
         'gwebsocket>=0.9.7',
         'Werkzeug>=0.10.1',
     ],

@@ -243,7 +243,6 @@ class SmartStatic(object):
         self.hash_cache = HashCache()
 
     def __call__(self, app, req, params, **kwargs):
-        print 'call', app, req, params, kwargs
         return CacheBustingStaticHandler(app, req, params,
                                          directory=self.directory,
                                          hash_paths=self.hash_paths,

@@ -5,17 +5,14 @@ from spa.wrappers import JSONResponse
 class Handler(object):
     """Baseclass for our handlers."""
 
-    allowed_methods = ('GET', 'HEAD', 'POST', 'DELETE', 'PUT')
+    allowed_methods = ('GET', 'HEAD', 'POST', 'DELETE', 'PUT', 'PATCH')
+    get = post = delete = put = patch = NotImplemented
 
     def __init__(self, app, req, params, **kwargs):
         self.app = app
         self.request = req
         self.params = params
         self.kwargs = kwargs
-
-    def get(self, *args, **kwargs):
-        return MethodNotAllowed()
-    post = delete = put = websocket = get
 
     def head(self, *args, **kwargs):
         return self.get()
@@ -34,6 +31,9 @@ class Handler(object):
             handler = self.websocket
         else:
             handler = getattr(self, self.request.method.lower())
+
+        if handler == NotImplemented:
+            return MethodNotAllowed()
 
         resp = handler(**self.params)
         return resp(environ, start_response)

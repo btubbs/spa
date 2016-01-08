@@ -133,7 +133,8 @@ class CacheBustingStaticHandler(StaticHandler):
         def converter(matchobj):
             matched, url = matchobj.groups()
             if url.startswith(('#', 'http:', 'https:', 'data:', '//')):
-                return url
+                # These kinds of URLs should be left untouched.
+                return matched
             return tpl.format(hashed_url=self.convert_css_url(url))
         return converter
 

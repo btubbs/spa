@@ -8,10 +8,11 @@ class Handler(object):
     allowed_methods = ('GET', 'HEAD', 'POST', 'DELETE', 'PUT', 'PATCH')
     get = post = delete = put = patch = NotImplemented
 
-    def __init__(self, app, req, params, **kwargs):
+    def __init__(self, app, req, params, route_name, **kwargs):
         self.app = app
         self.request = req
         self.params = params
+        self.route_name = route_name
         self.kwargs = kwargs
 
     def head(self, *args, **kwargs):

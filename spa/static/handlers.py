@@ -20,9 +20,9 @@ File = namedtuple('File', ('handle', 'name', 'mtime', 'size', 'mimetype'))
 
 
 class StaticHandler(Handler):
-    def __init__(self, app, req, params, directory, disallow=None, cache=True,
+    def __init__(self, app, req, params, route_name, directory, disallow=None, cache=True,
                  cache_timeout=60 * 60 * 12, fallback_mimetype='text/plain'):
-        super(StaticHandler, self).__init__(app, req, params)
+        super(StaticHandler, self).__init__(app, req, params, route_name)
         self.cache = cache
         self.cache_timeout = cache_timeout
 

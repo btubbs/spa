@@ -40,13 +40,13 @@ class CacheBustingStaticHandler(StaticHandler):
          """@import url("{hashed_url}")"""),
     )
 
-    def __init__(self, app, req, params, directory, hash_cache, hash_paths=True,
-                 static_url_root='/static/', **kwargs):
+    def __init__(self, app, req, params, route_name, directory, hash_cache,
+                 hash_paths=True, static_url_root='/static/', **kwargs):
         self.hash_cache = hash_cache
         self.hash_paths = hash_paths
         self.static_url_root = static_url_root
         return super(CacheBustingStaticHandler, self).__init__(
-            app, req, params, directory, **kwargs
+            app, req, params, route_name, directory, **kwargs
         )
 
 
@@ -243,8 +243,8 @@ class SmartStatic(object):
         self.hash_paths = hash_paths
         self.hash_cache = HashCache()
 
-    def __call__(self, app, req, params, **kwargs):
-        return CacheBustingStaticHandler(app, req, params,
+    def __call__(self, app, req, params, route_name, **kwargs):
+        return CacheBustingStaticHandler(app, req, params, route_name,
                                          directory=self.directory,
                                          hash_paths=self.hash_paths,
                                          hash_cache=self.hash_cache,

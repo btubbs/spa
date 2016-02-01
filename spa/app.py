@@ -17,6 +17,7 @@ class App(object):
             adapter = self.map.bind_to_environ(environ)
             route_name, params = adapter.match()
             cls, kwargs = self.handlers[route_name]
+            print "cls", cls
             wsgi_app = cls(self, req, params, route_name, **kwargs)
             resp = wsgi_app(environ, start_response)
         except HTTPException, e:

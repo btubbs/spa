@@ -114,5 +114,5 @@ class HomePage(object):
             )
         return self.rendered
 
-    def __call__(self, app, req, params):
+    def __call__(self, app, req, params, route_name):
         return Response(self.render(), content_type=self.content_type)

@@ -44,9 +44,9 @@ def test_put():
 
 def test_route_kwargs():
     class Kwargy(spa.Handler):
-        def __init__(self, app, req, params, some_kwarg, **kwargs):
+        def __init__(self, app, req, params, route_name, some_kwarg, **kwargs):
             self.some_kwarg = some_kwarg
-            super(Kwargy, self).__init__(app, req, params, **kwargs)
+            super(Kwargy, self).__init__(app, req, params, route_name, **kwargs)
 
         def get(self):
             return spa.Response(self.some_kwarg)

@@ -147,6 +147,18 @@ class StaticHandler(Handler):
         return resp(environ, start_response)
 
 
+class StaticFileHandler(StaticHandler):
+    def __init__(self, app, req, params, route_name, directory, filepath,
+                 **kwargs):
+
+        self.filepath = filepath
+        super(StaticFileHandler, self).__init__(app, req, params, route_name,
+                                                directory, **kwargs)
+
+    def get(self):
+        return super(StaticFileHandler, self).get(self.filepath)
+
+
 class Static(object):
     """
     A factory for making StaticHandler instances that share a directory
@@ -157,8 +169,8 @@ class Static(object):
         self.directory = directory
         self.kwargs = kwargs
 
-    def __call__(self, app, req, params, **kwargs):
+    def __call__(self, app, req, params, route_name, **kwargs):
         new_kwargs = dict(self.kwargs)
         new_kwargs.update(kwargs)
-        return StaticHandler(app, req, params, directory=self.directory,
+        return StaticHandler(app, req, params, route_name, directory=self.directory,
                              **new_kwargs)

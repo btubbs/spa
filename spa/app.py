@@ -19,7 +19,7 @@ class App(object):
             cls, kwargs = self.handlers[route_name]
             wsgi_app = cls(self, req, params, route_name, **kwargs)
             resp = wsgi_app(environ, start_response)
-        except HTTPException, e:
+        except HTTPException as e:
             wsgi_app = e
             resp = wsgi_app(environ, start_response)
 

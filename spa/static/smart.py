@@ -4,7 +4,7 @@ import os
 import posixpath
 import re
 from time import time
-from urlparse import urlsplit, urlunsplit
+from six.moves.urllib.parse import urlsplit, urlunsplit
 
 from werkzeug.exceptions import NotFound
 from werkzeug.http import is_resource_modified, http_date

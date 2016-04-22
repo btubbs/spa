@@ -11,7 +11,7 @@ def import_class(path):
         module, dot, klass = path.rpartition('.')
         imported = __import__(module, globals(), locals(), [klass, ], -1)
         return getattr(imported, klass)
-    except Exception, e:
+    except Exception as e:
         raise ImportError(e)
 
 

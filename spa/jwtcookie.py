@@ -114,6 +114,7 @@ import jwt
 from werkzeug._compat import text_type
 from werkzeug.contrib.sessions import ModificationTrackingDict
 from werkzeug.http import dump_cookie
+from six.moves.urllib.parse import parse_qs
 
 
 class JWTCookie(ModificationTrackingDict):
@@ -234,11 +235,13 @@ class JWTCookie(ModificationTrackingDict):
 
 
 class JWTSessionMiddleware(object):
-    def __init__(self, app, secret_key, cookie_name='session', expire_days=1,
+    def __init__(self, app, secret_key, cookie_name='session',
+                 wsgi_name='jwtsession', expire_days=1,
                  algorithm='HS256'):
         self.app = app
         self.secret_key = secret_key
         self.cookie_name = cookie_name
+        self.wsgi_name = wsgi_name
         self.expire_days = expire_days
         self.algorithm = algorithm
 
@@ -261,7 +264,7 @@ class JWTSessionMiddleware(object):
                 session = JWTCookie({}, self.secret_key, self.algorithm)
         else:
             session = JWTCookie({}, self.secret_key, self.algorithm)
-        environ['jwtsession'] = session
+        environ[self.wsgi_name] = session
 
 
         # on the way out: serialize jwtsession and stick it into headers as
@@ -272,9 +275,43 @@ class JWTSessionMiddleware(object):
             if session.should_save or session == {}:
                 # add our cookie to headers
                 c = dump_cookie(self.cookie_name,
-                                value=environ['jwtsession'].serialize(),
+                                value=environ[self.wsgi_name].serialize(),
                                 max_age=timedelta(days=self.expire_days))
                 headers.append(('Set-Cookie', c))
             return start_response(status, headers, exc_info=exc_info)
 
         return self.app(environ, session_start_response)
+
+
+class JWTSessionParamMiddleware(object):
+    """
+    This middleware supports setting session values from a query string
+    parameter (signed as a JSON Web Token).
+
+    This middleware must be used with some other middleware that actually
+    provides the session functionality.
+    """
+    def __init__(self, app, secret_key, expire_days=1, algorithm='HS256',
+                 qs_name='session_token', wsgi_name='jwtsession'):
+        self.app = app
+        self.secret_key = secret_key
+        self.expire_days = expire_days
+        self.algorithm = algorithm
+        self.qs_name = qs_name
+        self.wsgi_name = wsgi_name
+
+    def __call__(self, environ, start_response):
+        qs_params = {k: v[0] for k, v in
+                     parse_qs(environ['QUERY_STRING']).items()}
+        if self.qs_name not in qs_params:
+            print("qs param not found")
+            return self.app(environ, start_response)
+        try:
+            session_vals = jwt.decode(qs_params[self.qs_name], key=self.secret_key)
+        except jwt.DecodeError:
+            # silently drop malformed tokens
+            print("decode error", qs_params[self.qs_name])
+            return self.app(environ, start_response)
+
+        environ[self.wsgi_name].update(session_vals)
+        return self.app(environ, start_response)

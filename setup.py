@@ -21,6 +21,7 @@ setup_params = dict(
     install_requires=[
         'gunicorn>=19.4.1',
         'gwebsocket>=0.9.7',
+        'PyJWT>=1.4.0',
         'six>=1.10.0',
         'Werkzeug>=0.10.1',
     ],

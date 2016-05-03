@@ -107,15 +107,18 @@ r"""
             return response(environ, start_response)
 """
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from Cookie import SimpleCookie
 
 import jwt
+import utc
 from werkzeug._compat import text_type
 from werkzeug.contrib.sessions import ModificationTrackingDict
 from werkzeug.http import dump_cookie
 from six.moves.urllib.parse import parse_qs
 
+
+class TokenTimestampError(Exception): pass
 
 class JWTCookie(ModificationTrackingDict):
 
@@ -176,10 +179,11 @@ class JWTCookie(ModificationTrackingDict):
             raise RuntimeError('no secret key defined')
         if expires:
             self['exp'] = expires
+        self['iat'] = utc.now()
         return jwt.encode(self, self.secret_key, self.algorithm)
 
     @classmethod
-    def unserialize(cls, string, secret_key, algorithm='HS256'):
+    def unserialize(cls, string, secret_key, algorithm='HS256', expire_days=None):
 
         """Load the secure cookie from a serialized string.
 
@@ -193,6 +197,15 @@ class JWTCookie(ModificationTrackingDict):
             secret_key = secret_key.encode('utf-8', 'replace')
 
         items = jwt.decode(string, secret_key, algorithms=[algorithm])
+
+        if expire_days:
+            if 'iat' not in items:
+                raise TokenTimestampError('No iat claim in token')
+
+            issued_at = utc.fromtimestamp(items['iat'])
+            if (utc.now() - issued_at).days > expire_days:
+                raise TokenTimestampError('Token is too old')
+
         return cls(items, secret_key, algorithm)
 
     @classmethod
@@ -256,9 +269,10 @@ class JWTSessionMiddleware(object):
                     session = JWTCookie.unserialize(
                         cookie[self.cookie_name].value,
                         self.secret_key,
-                        self.algorithm
+                        self.algorithm,
+                        expire_days=self.expire_days,
                     )
-                except jwt.DecodeError:
+                except (jwt.DecodeError, TokenTimestampError):
                     session = JWTCookie({}, self.secret_key, self.algorithm)
             else:
                 session = JWTCookie({}, self.secret_key, self.algorithm)
@@ -304,14 +318,24 @@ class JWTSessionParamMiddleware(object):
         qs_params = {k: v[0] for k, v in
                      parse_qs(environ['QUERY_STRING']).items()}
         if self.qs_name not in qs_params:
-            print("qs param not found")
             return self.app(environ, start_response)
         try:
             session_vals = jwt.decode(qs_params[self.qs_name], key=self.secret_key)
         except jwt.DecodeError:
             # silently drop malformed tokens
-            print("decode error", qs_params[self.qs_name])
             return self.app(environ, start_response)
+
+        if self.expire_days:
+            if 'iat' not in session_vals:
+                # We can't enforce token expiration if the token has no issued
+                # at claim.  So ignore the token.
+                return self.app(environ, start_response)
+
+            issued_at = utc.fromtimestamp(session_vals['iat'])
+            if (utc.now() - issued_at).days > self.expire_days:
+                # Token has an issued at claim, but it's too old.  Ignore the
+                # token.
+                return self.app(environ, start_response)
 
         environ[self.wsgi_name].update(session_vals)
         return self.app(environ, start_response)

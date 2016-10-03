@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 from werkzeug.exceptions import MethodNotAllowed
 
 from spa.wrappers import JSONResponse

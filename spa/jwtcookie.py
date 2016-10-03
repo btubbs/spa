@@ -107,15 +107,17 @@ r"""
             return response(environ, start_response)
 """
 
+from __future__ import print_function
+
 from datetime import timedelta
-from Cookie import SimpleCookie
+from six.moves.http_cookies import SimpleCookie
+from six.moves.urllib.parse import parse_qs
 
 import jwt
 import utc
 from werkzeug._compat import text_type
 from werkzeug.contrib.sessions import ModificationTrackingDict
 from werkzeug.http import dump_cookie
-from six.moves.urllib.parse import parse_qs
 
 
 class TokenTimestampError(Exception): pass
@@ -146,8 +148,8 @@ class JWTCookie(ModificationTrackingDict):
         ModificationTrackingDict.__init__(self, data or ())
         # explicitly convert it into a bytestring because python 2.6
         # no longer performs an implicit string conversion on hmac
-        if secret_key is not None:
-            secret_key = bytes(secret_key)
+        if secret_key is not None and not isinstance(secret_key, bytes):
+            secret_key = bytes(secret_key, 'utf8')
         self.secret_key = secret_key
         self.algorithm = algorithm
 

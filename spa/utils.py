@@ -28,7 +28,9 @@ class SpaGunicornApplication(GunicornApplication):
         workers=os.getenv('GUNICORN_WORKER_COUNT', multiprocessing.cpu_count() * 2),
         # Heroku/Velociraptor-friendly PORT handling.
         bind='0.0.0.0:%s' % os.getenv('PORT', 8000),
-        graceful_timeout = os.getenv('GUNICORN_WORKER_GRACETIME', 30),
+        graceful_timeout = int(os.getenv('GUNICORN_WORKER_GRACETIME', 30)),
+        timeout = int(os.getenv('GUNICORN_TIMEOUT', 10)),
+        loglevel = 'debug',
     )
 
     def __init__(self, wsgi_app, port=None, gunicorn_config=None):

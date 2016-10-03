@@ -1,5 +1,7 @@
 import json
 
+import six
+
 from werkzeug.wrappers import Response, Request as WRequest
 
 
@@ -29,6 +31,8 @@ class Request(WRequest):
 
     def json(self):
         if self.headers.get('content-type', '').lower() in JSON_TYPES:
+            if six.PY3:
+                return json.loads(self.data.decode())
             return json.loads(self.data)
         else:
             from spa.exceptions import JSONBadRequest

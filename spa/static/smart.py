@@ -226,7 +226,15 @@ def add_hash_to_filepath(filepath, hash_str):
 
 
 def get_hash(f, hash_len=12):
-    md5 = hashlib.md5(f.read())
+    # Read the file in 1KB chunks and feed them into the md5 object as you
+    # go so you don't burn memory on big files.  Note that this will run forever
+    # if you feed it a never-ending file-like object.
+    md5 = hashlib.md5()
+    while True:
+        chunk = f.read(1024)
+        if chunk == b'':
+            break
+        md5.update(chunk)
     return md5.hexdigest()[:hash_len]
 
 

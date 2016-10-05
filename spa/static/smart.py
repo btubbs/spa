@@ -225,10 +225,8 @@ def add_hash_to_filepath(filepath, hash_str):
     return os.path.join(path, "%s.%s%s" % (root, hash_str, ext))
 
 
-def get_hash(lines, hash_len=12):
-    md5 = hashlib.md5()
-    for line in lines:
-        md5.update(line)
+def get_hash(f, hash_len=12):
+    md5 = hashlib.md5(f.read())
     return md5.hexdigest()[:hash_len]
 
 

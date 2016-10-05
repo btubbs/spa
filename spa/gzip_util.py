@@ -54,15 +54,15 @@ def compress(chunks, compress_level, close=True):
     """
     try:
         # See http://www.gzip.org/zlib/rfc-gzip.html
-        yield '\x1f\x8b'       # ID1 and ID2: gzip marker
-        yield '\x08'           # CM: compression method
-        yield '\x00'           # FLG: none set
+        yield b'\x1f\x8b'       # ID1 and ID2: gzip marker
+        yield b'\x08'           # CM: compression method
+        yield b'\x00'           # FLG: none set
         # MTIME: 4 bytes
         yield struct.pack("<L", int(time.time()) & int('FFFFFFFF', 16))
-        yield '\x02'           # XFL: max compression, slowest algo
-        yield '\xff'           # OS: unknown
+        yield b'\x02'           # XFL: max compression, slowest algo
+        yield b'\xff'           # OS: unknown
 
-        crc = zlib.crc32("")
+        crc = zlib.crc32(b"")
         size = 0
         zobj = zlib.compressobj(compress_level,
                                 zlib.DEFLATED, -zlib.MAX_WBITS,

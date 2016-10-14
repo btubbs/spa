@@ -111,7 +111,7 @@ class CacheBustingStaticHandler(StaticHandler):
                 contents = self.hash_cache.get_contents(filepath)
 
                 if contents is None:
-                    contents = file.handle.read()
+                    contents = file.handle.read().decode('utf-8')
                     for pat, tpl in self.css_url_patterns:
                         converter = self.get_converter(tpl)
                         contents = pat.sub(converter, contents)
@@ -124,7 +124,7 @@ class CacheBustingStaticHandler(StaticHandler):
                 ))
                 start_response('200 OK', headers)
 
-                return [contents]
+                return [contents.encode('utf-8')]
             finally:
                 file.handle.close()
         return resp

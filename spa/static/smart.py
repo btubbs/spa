@@ -244,14 +244,17 @@ class SmartStatic(object):
     instance.
     """
 
-    def __init__(self, directory, hash_paths=True):
+    def __init__(self, directory, hash_paths=True, **kwargs):
         self.directory = directory
         self.hash_paths = hash_paths
         self.hash_cache = HashCache()
+        self.kwargs = kwargs or {}
 
     def __call__(self, app, req, params, route_name, **kwargs):
+        newkwargs = dict(self.kwargs)
+        newkwargs.update(kwargs)
         return CacheBustingStaticHandler(app, req, params, route_name,
                                          directory=self.directory,
                                          hash_paths=self.hash_paths,
                                          hash_cache=self.hash_cache,
-                                         **kwargs)
+                                         **newkwargs)

@@ -30,7 +30,7 @@ class SpaGunicornApplication(GunicornApplication):
         bind='0.0.0.0:%s' % os.getenv('PORT', 8000),
         graceful_timeout = int(os.getenv('GUNICORN_WORKER_GRACETIME', 30)),
         timeout = int(os.getenv('GUNICORN_TIMEOUT', 10)),
-        loglevel = 'debug',
+        loglevel = 'info',
     )
 
     def __init__(self, wsgi_app, port=None, gunicorn_config=None):

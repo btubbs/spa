@@ -112,6 +112,7 @@ from __future__ import print_function
 from datetime import timedelta
 from six.moves.http_cookies import SimpleCookie
 from six.moves.urllib.parse import parse_qs
+import re
 
 import jwt
 import utc
@@ -252,15 +253,24 @@ class JWTCookie(ModificationTrackingDict):
 class JWTSessionMiddleware(object):
     def __init__(self, app, secret_key, cookie_name='session',
                  wsgi_name='jwtsession', expire_days=1,
-                 algorithm='HS256'):
+                 algorithm='HS256', exclude_pattern=None):
         self.app = app
         self.secret_key = secret_key
         self.cookie_name = cookie_name
         self.wsgi_name = wsgi_name
         self.expire_days = expire_days
         self.algorithm = algorithm
+        if exclude_pattern:
+            self.exclude_pattern = re.compile(exclude_pattern)
+        else:
+            self.exclude_pattern = None
 
     def __call__(self, environ, start_response):
+        if self.exclude_pattern and re.match(self.exclude_pattern,
+                                             environ['PATH_INFO']):
+            print('excluding')
+            return self.app(environ, start_response)
+
         # on the way in: if environ includes our cookie, then deserialize it and
         # stick it back into environ as jwtsession.  If environ doesn't include
         # one then make an empty one and stick that in.
@@ -274,11 +284,14 @@ class JWTSessionMiddleware(object):
                         self.algorithm,
                         expire_days=self.expire_days,
                     )
-                except (jwt.DecodeError, TokenTimestampError):
+                except (jwt.DecodeError, TokenTimestampError) as e:
+                    print(e)
                     session = JWTCookie({}, self.secret_key, self.algorithm)
             else:
+                print('no cookie name')
                 session = JWTCookie({}, self.secret_key, self.algorithm)
         else:
+            print('no cookie')
             session = JWTCookie({}, self.secret_key, self.algorithm)
         environ[self.wsgi_name] = session
 

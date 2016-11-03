@@ -69,7 +69,7 @@ class HomePage(object):
 
         if self.hash_paths:
             abs_path = os.path.join(self.static_handler.directory, filepath)
-            with open(abs_path) as f:
+            with open(abs_path, 'rb') as f:
                 file_hash = get_hash(f)
 
             filepath = add_hash_to_filepath(filepath, file_hash)

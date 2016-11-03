@@ -27,8 +27,8 @@ def test_homepage_scripts():
     resp = c.get('/')
 
     expected_tags = [
-        '<script type="text/javascript" src="/static/js/test1.5475b9391ae5.js"></script>',
-        '<script type="text/javascript" src="/static/js/test2.de48a5238f6c.js"></script>',
+        b'<script type="text/javascript" src="/static/js/test1.5475b9391ae5.js"></script>',
+        b'<script type="text/javascript" src="/static/js/test2.de48a5238f6c.js"></script>',
     ]
 
     for t in expected_tags:
@@ -49,7 +49,7 @@ def test_homepage_stylesheet():
     resp = c.get('/')
 
     expected_tags = [
-        '<link rel="stylesheet" type="text/css" href="/static/css/test.9ed67fcada19.css" />'
+        b'<link rel="stylesheet" type="text/css" href="/static/css/test.9ed67fcada19.css" />'
     ]
 
     for t in expected_tags:
@@ -71,5 +71,5 @@ def test_homepage_extra():
     app = spa.App(routes)
     c = Client(app, spa.Response)
     resp = c.get('/')
-    assert '<!-- extra header stuff -->' in resp.data
-    assert '<!-- extra footer stuff -->' in resp.data
+    assert b'<!-- extra header stuff -->' in resp.data
+    assert b'<!-- extra footer stuff -->' in resp.data

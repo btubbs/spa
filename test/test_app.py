@@ -15,7 +15,7 @@ def test_get():
     c = Client(app, spa.Response)
     resp = c.get('/')
     assert resp.status_code == 200
-    assert resp.data == 'hello'
+    assert resp.data == b'hello'
 
 
 def test_post():
@@ -27,7 +27,7 @@ def test_post():
     ))
     c = Client(app, spa.Response)
     resp = c.post('/', data='some data')
-    assert resp.data == 'some data'
+    assert resp.data == b'some data'
 
 
 def test_put():
@@ -39,7 +39,7 @@ def test_put():
     ))
     c = Client(app, spa.Response)
     resp = c.put('/', data='some data')
-    assert resp.data == 'some data'
+    assert resp.data == b'some data'
 
 
 def test_route_kwargs():
@@ -56,7 +56,7 @@ def test_route_kwargs():
     ))
     c = Client(app, spa.Response)
     resp = c.get('/')
-    assert resp.data == 'foo'
+    assert resp.data == b'foo'
 
 
 def test_json_response():
@@ -69,7 +69,7 @@ def test_json_response():
     ))
     c = Client(app, spa.Response)
     resp = c.get('/')
-    assert resp.data == '{"a": 1}'
+    assert resp.data == b'{"a": 1}'
     assert resp.headers['Content-Type'] == "application/json"
 
 
@@ -83,7 +83,7 @@ def test_path_args():
     ))
     c = Client(app, spa.Response)
     resp = c.get('/country/Poland/city/Warsaw/')
-    assert resp.data == 'Poland: Warsaw'
+    assert resp.data == b'Poland: Warsaw'
 
 
 def test_reverse_url():
@@ -107,5 +107,5 @@ def test_json_handler():
     ))
     c = Client(app, spa.Response)
     resp = c.get('/')
-    assert resp.data == '{"a": 1}'
+    assert resp.data == b'{"a": 1}'
     assert resp.headers['Content-Type'] == "application/json"

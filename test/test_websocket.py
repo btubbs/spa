@@ -46,7 +46,8 @@ def test_echo():
         from websocket import create_connection
         ws = create_connection('ws://localhost:%s/' % port)
         ws.send('hey!')
-        assert ws.recv() == 'hey!'
+        received = ws.recv()
+        assert received == 'hey!'
         ws.close()
     finally:
         p.terminate()

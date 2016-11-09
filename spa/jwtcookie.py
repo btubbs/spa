@@ -268,7 +268,6 @@ class JWTSessionMiddleware(object):
     def __call__(self, environ, start_response):
         if self.exclude_pattern and re.match(self.exclude_pattern,
                                              environ['PATH_INFO']):
-            print('excluding')
             return self.app(environ, start_response)
 
         # on the way in: if environ includes our cookie, then deserialize it and
@@ -285,13 +284,10 @@ class JWTSessionMiddleware(object):
                         expire_days=self.expire_days,
                     )
                 except (jwt.DecodeError, TokenTimestampError) as e:
-                    print(e)
                     session = JWTCookie({}, self.secret_key, self.algorithm)
             else:
-                print('no cookie name')
                 session = JWTCookie({}, self.secret_key, self.algorithm)
         else:
-            print('no cookie')
             session = JWTCookie({}, self.secret_key, self.algorithm)
         environ[self.wsgi_name] = session
 

@@ -7,8 +7,9 @@ from spa.wrappers import JSONResponse
 class Handler(object):
     """Baseclass for our handlers."""
 
-    allowed_methods = ('GET', 'HEAD', 'POST', 'DELETE', 'PUT', 'PATCH')
-    get = post = delete = put = patch = NotImplemented
+    allowed_methods = ('GET', 'HEAD', 'POST', 'DELETE', 'PUT', 'PATCH',
+                       'OPTIONS')
+    get = post = delete = put = patch = options = NotImplemented
 
     def __init__(self, app, req, params, route_name, **kwargs):
         self.app = app

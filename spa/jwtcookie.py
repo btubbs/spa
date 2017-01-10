@@ -316,7 +316,7 @@ class JWTSessionParamMiddleware(object):
     This middleware must be used with some other middleware that actually
     provides the session functionality.
     """
-    def __init__(self, app, secret_key, expire_days=1, algorithm='HS256',
+    def __init__(self, app, secret_key, expire_days=7, algorithm='HS256',
                  qs_name='session_token', wsgi_name='jwtsession'):
         self.app = app
         self.secret_key = secret_key

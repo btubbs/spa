@@ -1,7 +1,10 @@
 from __future__ import print_function
 
+import datetime
+
 from werkzeug.test import Client
 import jwt
+import pytest
 import utc
 
 import spa
@@ -109,3 +112,30 @@ def test_qs_middleware():
     assert cookieparts[0] == 'session'
     assert jwt.decode(cookieparts[1], secret)['foo'] == 'bar'
 
+
+def test_jwtsession_expire_days():
+    class A(spa.Handler):
+        def get(self):
+            return spa.Response(self.request.environ['jwtsession']['foo'])
+
+    routes = (
+        ('/', 'a', A),
+    )
+
+    app = spa.App(routes)
+
+    secret = 'foobar'
+
+    app = JWTSessionMiddleware(app, secret_key=secret, expire_days=1)
+
+    c = Client(app, spa.Response)
+    tok = jwt.encode({
+        'foo': 'bar',
+        'iat': utc.now() - datetime.timedelta(days=1)
+    }, secret)
+    c.set_cookie('localhost', 'session', tok)
+    with pytest.raises(KeyError):
+        # The handler should fail to read 'foo' from the session, because it
+        # will have been dropped when the middleware saw that its 'iat'
+        # timestamp was too old.
+        c.get('/')

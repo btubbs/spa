@@ -109,7 +109,7 @@ r"""
 
 from __future__ import print_function
 
-from datetime import timedelta
+import datetime
 from six.moves.http_cookies import SimpleCookie
 from six.moves.urllib.parse import parse_qs
 import re
@@ -206,7 +206,8 @@ class JWTCookie(ModificationTrackingDict):
                 raise TokenTimestampError('No iat claim in token')
 
             issued_at = utc.fromtimestamp(items['iat'])
-            if (utc.now() - issued_at).days > expire_days:
+            time_passed = utc.now() - issued_at
+            if time_passed > datetime.timedelta(days=expire_days):
                 raise TokenTimestampError('Token is too old')
 
         return cls(items, secret_key, algorithm)
@@ -301,7 +302,7 @@ class JWTSessionMiddleware(object):
                 # add our cookie to headers
                 c = dump_cookie(self.cookie_name,
                                 value=environ[self.wsgi_name].serialize(),
-                                max_age=timedelta(days=self.expire_days))
+                                max_age=datetime.timedelta(days=self.expire_days))
                 headers.append(('Set-Cookie', c))
             return start_response(status, headers, exc_info=exc_info)
 

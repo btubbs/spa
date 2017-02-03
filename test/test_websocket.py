@@ -39,7 +39,7 @@ def test_echo():
         tries = 0
         max_tries = 10
         while sock.connect_ex(('127.0.0.1', port)) != 0:
-            time.sleep(0.1)
+            time.sleep(0.5)
             tries += 1
             assert tries < max_tries, "Timed out waiting for websocket server"
 

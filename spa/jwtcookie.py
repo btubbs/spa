@@ -284,7 +284,7 @@ class JWTSessionMiddleware(object):
                         self.algorithm,
                         expire_days=self.expire_days,
                     )
-                except (jwt.DecodeError, TokenTimestampError) as e:
+                except (jwt.DecodeError, TokenTimestampError):
                     session = JWTCookie({}, self.secret_key, self.algorithm)
             else:
                 session = JWTCookie({}, self.secret_key, self.algorithm)
@@ -296,8 +296,6 @@ class JWTSessionMiddleware(object):
         # on the way out: serialize jwtsession and stick it into headers as
         # 'session'.
         def session_start_response(status, headers, exc_info=None):
-            # TODO: make this smarter so we can avoid sending cookies with
-            # static file requests.
             if session.should_save or session == {}:
                 # add our cookie to headers
                 c = dump_cookie(self.cookie_name,

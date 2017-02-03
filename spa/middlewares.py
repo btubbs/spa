@@ -1,3 +1,10 @@
+import string
+import random
+from six.moves.http_cookies import SimpleCookie
+
+from werkzeug.http import dump_cookie
+from werkzeug import exceptions
+
 from spa import gzip_util
 
 
@@ -27,14 +34,13 @@ class GzipMiddleware(object):
         if not gzip_util.gzip_requested(encode_header):
             return self.app(environ, start_response)
 
-
         buffer = {'to_gzip': False, 'body': ''}
 
         def _write(body):
             # for WSGI compliance
             buffer['body'] = body
 
-        def _start_response(status, headers, exc_info=None):
+        def _start_response_wrapper(status, headers, exc_info=None):
             ''' Wrapper around the original `start_response` function.
                 The sole purpose being to add the proper headers automatically.
             '''
@@ -57,7 +63,7 @@ class GzipMiddleware(object):
             buffer['exc_info'] = exc_info
             return _write
 
-        data = self.app(environ, _start_response)
+        data = self.app(environ, _start_response_wrapper)
         if buffer['status'].startswith('200 ') and buffer['to_gzip']:
             data = gzip_util.compress(data, self.compress_level)
             headers = buffer['headers']
@@ -80,3 +86,49 @@ class GzipMiddleware(object):
             _writable(buffer['body'])
 
         return data
+
+
+def make_csrf_cookie(name, tok_length):
+
+    tok = ''.join(
+        random.choice(string.ascii_letters) for x in range(tok_length)
+    )
+    return dump_cookie(name, value=tok)
+
+
+class ApiCSRFMiddleware(object):
+    """Middleware that sets a api_csrf cookie on responses, if not already set.
+    On POST, PUT, PATCH, and DELETE requests, requires that a X-Api-CSRF header
+    be set equal to the cookie value.  If not set, return """
+
+    protected_methods = set(['POST', 'PUT', 'PATCH', 'DELETE'])
+
+    def __init__(self, app, cookie_name='api_csrf', header_name='X-Api-CSRF',
+                 tok_length=32):
+        self.app = app
+        self.cookie_name = cookie_name
+        self.header_name = header_name
+        self.tok_length = tok_length
+
+    def __call__(self, environ, start_response):
+        if environ['REQUEST_METHOD'] in self.protected_methods:
+            try:
+                cookie = SimpleCookie(environ['HTTP_COOKIE'])[self.cookie_name].value
+                header = environ['HTTP_' + self.header_name.replace('-', '_').upper()]
+                assert cookie == header
+            except (KeyError, AssertionError):
+                return exceptions.Forbidden()(environ, start_response)
+
+        def start_response_wrapper(status, headers, exc_info=None):
+
+            if 'HTTP_COOKIE' in environ:
+                cookie = SimpleCookie(environ['HTTP_COOKIE'])
+                if self.cookie_name not in cookie:
+                    headers.append(('Set-Cookie',
+                                    make_csrf_cookie(self.cookie_name,
+                                                     self.tok_length)))
+            else:
+                headers.append(('Set-Cookie', make_csrf_cookie(self.cookie_name,
+                                                               self.tok_length)))
+            return start_response(status, headers, exc_info=exc_info)
+        return self.app(environ, start_response_wrapper)

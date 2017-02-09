@@ -78,3 +78,23 @@ def test_empty_header_blocked():
     c.set_cookie('localhost', 'api_csrf', 'foobar')
     resp = c.post('/')
     assert resp.status_code == 403
+
+
+def test_exclude_pattern():
+    class A(spa.Handler):
+        def post(self):
+            return spa.Response('hello world')
+    routes = (
+        ('/unblocked', 'unblocked', A),
+        ('/blocked', 'blocked', A),
+    )
+
+    app = ApiCSRFMiddleware(
+        spa.App(routes),
+        exclude_pattern='/unblocked'
+    )
+    c = Client(app, spa.Response)
+    resp = c.post('/blocked')
+    assert resp.status_code == 403
+    resp = c.post('/unblocked')
+    assert resp.status_code == 200

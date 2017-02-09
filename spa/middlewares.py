@@ -1,3 +1,5 @@
+import logging
+import re
 import string
 import random
 from six.moves.http_cookies import SimpleCookie
@@ -6,6 +8,9 @@ from werkzeug.http import dump_cookie
 from werkzeug import exceptions
 
 from spa import gzip_util
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 COMPRESSABLE_MIMETYPES = (
@@ -104,20 +109,42 @@ class ApiCSRFMiddleware(object):
     protected_methods = set(['POST', 'PUT', 'PATCH', 'DELETE'])
 
     def __init__(self, app, cookie_name='api_csrf', header_name='X-Api-CSRF',
-                 tok_length=32):
+                 tok_length=32, exclude_pattern=None):
         self.app = app
         self.cookie_name = cookie_name
         self.header_name = header_name
         self.tok_length = tok_length
+        if exclude_pattern:
+            self.exclude_pattern = re.compile(exclude_pattern)
+        else:
+            self.exclude_pattern = None
 
     def __call__(self, environ, start_response):
+        if self.exclude_pattern and re.match(self.exclude_pattern,
+                                             environ['PATH_INFO']):
+            return self.app(environ, start_response)
         if environ['REQUEST_METHOD'] in self.protected_methods:
-            try:
-                cookie = SimpleCookie(environ['HTTP_COOKIE'])[self.cookie_name].value
-                header = environ['HTTP_' + self.header_name.replace('-', '_').upper()]
-                assert cookie == header
-            except (KeyError, AssertionError):
+            cookieheader = environ.get('HTTP_COOKIE')
+            if not cookieheader:
+                logger.info('No cookie header')
                 return exceptions.Forbidden()(environ, start_response)
+
+            cookie = SimpleCookie(environ['HTTP_COOKIE']).get(
+                self.cookie_name
+            )
+            if not cookie:
+                logger.info('No CSRF cookie')
+                return exceptions.Forbidden()(environ, start_response)
+
+            headername = 'HTTP_' + self.header_name.replace('-', '_').upper()
+            if headername not in environ:
+                logger.info('No CSRF header')
+                return exceptions.Forbidden()(environ, start_response)
+
+            if cookie.value != environ[headername]:
+                logger.info('Mismatched CSRF cookie and header')
+                return exceptions.Forbidden()(environ, start_response)
+
 
         def start_response_wrapper(status, headers, exc_info=None):
 

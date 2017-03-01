@@ -41,3 +41,16 @@ for obj_name in dir(exceptions):
             __init__=init,
         ))
         globals()[new_cls_name] = cls
+
+# add one for rate limiting
+JSONEnhanceYourCalm = type(
+    'JSONEnhanceYourCalm',
+    (exceptions.BadRequest,),
+    dict(
+        name='Enhance Your Calm',
+        code=420,
+        get_body=get_body,
+        get_headers=get_headers,
+        __init__=init,
+    )
+)

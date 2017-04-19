@@ -12,18 +12,21 @@ class App(object):
         self.request_class = request_class or Request
 
     def __call__(self, environ, start_response):
-        req = self.request_class(environ)
         try:
-            adapter = self.map.bind_to_environ(environ)
-            route_name, params = adapter.match()
-            cls, kwargs = self.handlers[route_name]
-            wsgi_app = cls(self, req, params, route_name, **kwargs)
+            wsgi_app = self.get_handler(environ)
             resp = wsgi_app(environ, start_response)
         except HTTPException as e:
             wsgi_app = e
             resp = wsgi_app(environ, start_response)
 
         return resp
+
+    def get_handler(self, environ):
+        req = self.request_class(environ)
+        adapter = self.map.bind_to_environ(environ)
+        route_name, params = adapter.match()
+        cls, kwargs = self.handlers[route_name]
+        return cls(self, req, params, route_name, **kwargs)
 
     def url(self, endpoint, **values):
         return self.map.bind('').build(endpoint, values=values)

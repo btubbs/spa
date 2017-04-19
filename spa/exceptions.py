@@ -48,7 +48,7 @@ JSONEnhanceYourCalm = type(
     (exceptions.BadRequest,),
     dict(
         name='Enhance Your Calm',
-        description='You are doing that too much.',
+        description='You are doing that too much. Try again in a few minutes.',
         code=420,
         get_body=get_body,
         get_headers=get_headers,

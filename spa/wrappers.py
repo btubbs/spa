@@ -14,6 +14,7 @@ class JSONResponse(Response):
 JSON_TYPES = set([
     'application/json',
     'application/json;charset=utf-8',
+    'application/json; charset=utf-8',
 ])
 
 
